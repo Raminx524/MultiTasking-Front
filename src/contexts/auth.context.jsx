@@ -1,11 +1,13 @@
 import React, { createContext, useContext, useEffect, useState } from "react";
 import { formatJWTTokenToUser } from "../utils/utils";
 import axios from "axios";
+import { useNavigate } from "react-router-dom";
 const USER_URL = "http://localhost:3000/api/auth/";
 
 const UserContext = createContext(null);
 
 export const UserProvider = ({ children }) => {
+  const navigate = useNavigate();
   const [user, setUser] = useState(undefined);
   const [loading, setLoading] = useState(true);
   const login = (userInfo) => {
@@ -13,10 +15,12 @@ export const UserProvider = ({ children }) => {
   };
   const logout = () => {
     setUser(null);
+    localStorage.removeItem("MultiTask-Token");
+    navigate("/");
   };
 
   useEffect(() => {
-    const token = localStorage.getItem("token");
+    const token = localStorage.getItem("MultiTask-Token");
     async function getUserByToken() {
       try {
         const { userId } = formatJWTTokenToUser(token);
@@ -26,6 +30,10 @@ export const UserProvider = ({ children }) => {
         login(userRes.data);
       } catch (error) {
         console.log(error);
+        if (error.response && error.response.status === 401) {
+          localStorage.removeItem("MultiTask-Token");
+        }
+        setUser(null);
       } finally {
         setLoading(false);
       }

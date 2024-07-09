@@ -2,58 +2,80 @@ import React from "react";
 import axios from "axios";
 import { useUserContext } from "../contexts/auth.context";
 import { formatJWTTokenToUser } from "../utils/utils";
-import { useNavigate } from "react-router-dom";
-const AUTH_URL = "http://localhost:3000/api/auth/";
+import { Link, Navigate, useNavigate } from "react-router-dom";
+import { toast } from "@/components/ui/use-toast";
+import api from "@/services/api.service";
+import { Button } from "@/components/ui/button";
 
 function LoginPage() {
   const navigate = useNavigate();
-  const user = useUserContext();
+  const { user, login } = useUserContext();
+  if (user) return <Navigate to="/" />;
   async function handleLogin(e) {
     e.preventDefault();
     const formElem = e.target;
     const username = formElem.username.value;
     const password = formElem.password.value;
-    const res = await axios.post(AUTH_URL + "login", { username, password });
-    const token = res.data.token;
-    localStorage.setItem("token", token);
-    const { userId } = formatJWTTokenToUser(token);
-    const userRes = await axios.get(AUTH_URL + userId, {
-      headers: { Authorization: token },
-    });
-    user.login(userRes.data);
-
-    navigate("/");
+    try {
+      const res = await api.post("/auth/login", { username, password });
+      const token = res.data.token;
+      localStorage.setItem("MultiTask-Token", token);
+      const { userId } = formatJWTTokenToUser(token);
+      const userRes = await api.get(`/auth/${userId}`, {
+        headers: { Authorization: token },
+      });
+      login(userRes.data);
+      toast({ title: `Welcome ${userRes.data.firstName}` });
+      navigate("/");
+    } catch (err) {
+      if (err.response.status === 401)
+        toast({ title: "Invalid username or password!" });
+      else toast({ title: "Oops, Something went wrong!" });
+    }
   }
   return (
     <div className="flex justify-center my-24">
       <form
         onSubmit={handleLogin}
-        className="flex flex-row sm:flex-col items-center sm:gap-3 bg-blue-200 w-96 p-4 text-blue-900 border border-blue-300"
+        className="flex flex-col items-center sm:gap-3 w-96 p-4 rounded-lg border border-blue-300"
       >
         <h2 className="text-3xl">Log In</h2>
         <div className="flex flex-col gap-4 py-2">
           <div className="flex justify-between min-w-72">
             <label htmlFor="username">Username:</label>
             <input
+              required
               type="text"
               name="username"
               id="username"
-              className="border border-blue-200 focus:outline-none focus:border-blue-500 transition-all duration-300"
+              className="border text-primary  border-blue-200 placeholder-secondary focus:outline-none focus:border-blue-500 transition-all duration-300"
             />
           </div>
           <div className="flex justify-between min-w-72">
             <label htmlFor="password">Password:</label>
             <input
+              required
               type="password"
               name="password"
               id="password"
-              className="border border-blue-200 focus:outline-none focus:border-blue-500 transition-all duration-300"
+              className="border text-primary border-blue-200 focus:outline-none focus:border-blue-500 transition-all duration-300"
             />
           </div>
         </div>
-        <button className="text-blue-900 transition-all duration-300 hover:bg-blue-900 hover:text-white px-4 py-2 bg-blue-100 border border-blue-200">
+        <Button className="rounded-lg transition-all duration-300 hover:bg-blue-900 hover:text-white px-4 py-2  border">
           Login
-        </button>
+        </Button>
+        <div className="border-t-2  pt-4 w-full text-center">
+          <p>
+            Don't Have an account?{" "}
+            <Link
+              to="/register"
+              className="rounded-lg font-semibold border-b border-transparent hover:border-current"
+            >
+              Register Here
+            </Link>
+          </p>
+        </div>
       </form>
     </div>
   );

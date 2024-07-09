@@ -1,10 +1,15 @@
 import React from "react";
 const USER_URL = "http://localhost:3000/api/auth/";
 import axios from "axios";
-import { useNavigate } from "react-router-dom";
+import { Link, Navigate, useNavigate } from "react-router-dom";
+import { useUserContext } from "@/contexts/auth.context";
+import { toast } from "@/components/ui/use-toast";
+import { Button } from "@/components/ui/button";
 
 function RegisterPage() {
   const navigate = useNavigate();
+  const { user } = useUserContext();
+  if (user) return <Navigate to="/" />;
   async function handleRegister(e) {
     e.preventDefault();
     const formElem = e.target;
@@ -17,16 +22,19 @@ function RegisterPage() {
     };
     try {
       await axios.post(USER_URL + "register", newUser);
+      toast({ title: "User Created Successfully!" });
       navigate("/login");
     } catch (err) {
-      console.log(err);
+      if (err.response.status === 400)
+        toast({ title: err.response.data.error });
+      else toast({ title: "Oops, Something went wrong!" });
     }
   }
   return (
     <div className="flex justify-center my-24">
       <form
         onSubmit={handleRegister}
-        className="flex flex-row sm:flex-col items-center sm:gap-4 bg-blue-200 w-96 p-4 text-blue-900 border border-blue-300"
+        className="flex flex-col items-center sm:gap-4 rounded-lg w-96 p-4  border border-blue-300"
       >
         <h2 className="text-3xl">Register</h2>
         <div className="flex flex-col gap-4 py-2">
@@ -37,7 +45,7 @@ function RegisterPage() {
               type="text"
               name="username"
               id="username"
-              className="border border-blue-200 focus:outline-none focus:border-blue-500 transition-all duration-300"
+              className="border text-primary border-blue-200 focus:outline-none focus:border-blue-500 transition-all duration-300"
             />
           </div>
           <div className="flex justify-between min-w-72">
@@ -47,7 +55,7 @@ function RegisterPage() {
               type="password"
               name="password"
               id="password"
-              className="border border-blue-200 focus:outline-none focus:border-blue-500 transition-all duration-300"
+              className="border text-primary border-blue-200 focus:outline-none focus:border-blue-500 transition-all duration-300"
             />
           </div>
           <div className="flex justify-between min-w-72">
@@ -57,7 +65,7 @@ function RegisterPage() {
               type="email"
               name="email"
               id="email"
-              className="border border-blue-200 focus:outline-none focus:border-blue-500 transition-all duration-300"
+              className="border text-primary border-blue-200 focus:outline-none focus:border-blue-500 transition-all duration-300"
             />
           </div>
           <div className="flex justify-between min-w-72">
@@ -67,7 +75,7 @@ function RegisterPage() {
               type="text"
               name="firstName"
               id="firstName"
-              className="border border-blue-200 focus:outline-none focus:border-blue-500 transition-all duration-300"
+              className="border text-primary border-blue-200 focus:outline-none focus:border-blue-500 transition-all duration-300"
             />
           </div>
           <div className="flex justify-between min-w-72">
@@ -77,13 +85,24 @@ function RegisterPage() {
               type="text"
               name="lastName"
               id="lastName"
-              className="border border-blue-200 focus:outline-none focus:border-blue-500 transition-all duration-300"
+              className="border text-primary border-blue-200 focus:outline-none focus:border-blue-500 transition-all duration-300"
             />
           </div>
         </div>
-        <button className="text-blue-900 transition-all duration-300 hover:bg-blue-900 hover:text-white px-4 py-2 bg-blue-100 border border-blue-200">
+        <Button className=" transition-all duration-300 hover:bg-blue-900 hover:text-white px-4 py-2  border ">
           Sign Up
-        </button>
+        </Button>
+        <div className="border-t-2  pt-4 w-full text-center">
+          <p>
+            Already have an Account?{" "}
+            <Link
+              to="/login"
+              className=" font-semibold border-b border-transparent hover:border-current"
+            >
+              Login Here
+            </Link>
+          </p>
+        </div>
       </form>
     </div>
   );

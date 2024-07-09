@@ -7,7 +7,7 @@ const api = axios.create({
 
 api.interceptors.request.use(
   (config) => {
-    const token = localStorage.getItem("token");
+    const token = localStorage.getItem("MultiTask-Token");
     if (token) config.headers.Authorization = token;
     return config;
   },
